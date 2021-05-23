@@ -181,7 +181,6 @@ def message_reply(update: Update, context: CallbackContext) -> None:
                 )
 
 
-# TODO: README, noting privacy mode caveats
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="A Telegram bot that responds to AO3 links with the tags of the linked story"
