@@ -23,6 +23,9 @@ AO3_STORY_URL_STARTS = [
 # seconds to wait for responses from AO3
 REQUEST_TIMEOUT = 15
 
+# maximum message length allowed by the telegram API
+MAXIMUM_MESSAGE_LENGTH = 4096
+
 
 def normalize_url(url: str) -> str:
     """Add explicit HTTPS schema to schema-less links"""
@@ -86,6 +89,38 @@ def get_tags_for_story_url(url: str) -> Optional[Dict[str, str]]:
     return tag_info
 
 
+def get_messages_for_story(url: str, tag_info: Dict[str, str]) -> List[str]:
+    """
+    Construct the message text for the given tag_info, splitting the message text into multiple
+    messages if it exceeds the MAXIMUM_MESSAGE_LENGTH
+    """
+    message_text = ""
+    if "title" in tag_info:
+        message_text += f"\n<b>{tag_info['title']}</b>"
+    for key in [
+        "rating",
+        "warnings",
+        "categories",
+        "fandoms",
+        "relationships",
+        "characters",
+        "tags",
+    ]:
+        if key in tag_info:
+            message_text += f"\n<b>{key.capitalize()}:</b> {tag_info[key]}"
+    if not message_text:
+        message_text = f"Could not extract tags for {url}; is the story locked?"
+
+    if len(message_text) > MAXIMUM_MESSAGE_LENGTH:
+        logging.debug(
+            f"Message for {url} exceeds maximum length {MAXIMUM_MESSAGE_LENGTH}; splitting into chunks"
+        )
+    return [
+        message_text[i : i + MAXIMUM_MESSAGE_LENGTH]
+        for i in range(0, len(message_text), MAXIMUM_MESSAGE_LENGTH)
+    ]
+
+
 def get_chat_name(chat: Chat) -> Optional[str]:
     if chat.full_name is not None:  # DMs
         return f"DMs with '{chat.full_name}'"
@@ -128,39 +163,25 @@ def message_reply(update: Update, context: CallbackContext) -> None:
             # TODO: error handling
             # TODO: wrap in a try/except that does something generic but sane
             tag_info = get_tags_for_story_url(url)
-            logging.info(
-                f"Sending message to {get_chat_name(update.effective_chat)} for URL {url}"
-            )
             if tag_info is None:
-                message_text = (
+                message_texts = [
                     f"Could not extract tags for {url}; does the story exist?"
-                )
+                ]
             else:
-                message_text = ""
-                if "title" in tag_info:
-                    message_text += f"\n<b>{tag_info['title']}</b>"
-                for key in [
-                    "rating",
-                    "warnings",
-                    "categories",
-                    "fandoms",
-                    "relationships",
-                    "characters",
-                    "tags",
-                ]:
-                    if key in tag_info:
-                        message_text += f"\n<b>{key.capitalize()}:</b> {tag_info[key]}"
-                if not message_text:
-                    message_text = (
-                        f"Could not extract tags for {url}; is the story locked?"
-                    )
-            context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=message_text,
-                parse_mode=ParseMode.HTML,
-            )
+                message_texts = get_messages_for_story(url, tag_info)
+
+            for message_text in message_texts:
+                logging.info(
+                    f"Sending message to {get_chat_name(update.effective_chat)} for URL {url}"
+                )
+                context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=message_text,
+                    parse_mode=ParseMode.HTML,
+                )
 
 
+# TODO: README, noting privacy mode caveats
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="A Telegram bot that responds to AO3 links with the tags of the linked story"
