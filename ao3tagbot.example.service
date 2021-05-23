@@ -1,0 +1,10 @@
+[Unit]
+Description=AO3 Tag Bot for Telegram
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/PATH/TO/VENV/bin/python /PATH/TO/AO3TagBot/main.py TOKEN
+
+[Install]
+WantedBy=multi-user.target
