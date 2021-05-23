@@ -160,15 +160,17 @@ def message_reply(update: Update, context: CallbackContext) -> None:
     if urls:
         logging.debug(f"Found AO3 URLs {urls} in message")
         for url in urls:
-            # TODO: error handling
-            # TODO: wrap in a try/except that does something generic but sane
-            tag_info = get_tags_for_story_url(url)
-            if tag_info is None:
-                message_texts = [
-                    f"Could not extract tags for {url}; does the story exist?"
-                ]
-            else:
-                message_texts = get_messages_for_story(url, tag_info)
+            try:
+                tag_info = get_tags_for_story_url(url)
+                if tag_info is None:
+                    message_texts = [
+                        f"Could not extract tags for {url}; does the story exist?"
+                    ]
+                else:
+                    message_texts = get_messages_for_story(url, tag_info)
+            except:  # bad civilization, but this is a generic fallback for requests/BS4 exploding due to *something*
+                logging.exception(f"Could not retrieve tags for {url}")
+                message_texts = [f"Internal error while retrieving tags for {url}"]
 
             for message_text in message_texts:
                 logging.info(
