@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 
 from bs4 import BeautifulSoup
 import requests
-from telegram import ParseMode, Update
+from telegram import Chat, ParseMode, Update
 from telegram.ext import (
     CallbackContext,
     CommandHandler,
@@ -86,9 +86,17 @@ def get_tags_for_story_url(url: str) -> Optional[Dict[str, str]]:
     return tag_info
 
 
+def get_chat_name(chat: Chat) -> Optional[str]:
+    if chat.full_name is not None:  # DMs
+        return f"DMs with '{chat.full_name}'"
+    if chat.title is not None:  # channel or (super)group
+        return f"channel or group '{chat.title}'"
+    return None
+
+
 def start_command(update: Update, context: CallbackContext) -> None:
     """Respond to /start with a greeting and the /help message"""
-    logging.info(f"Responding to /start in chat {update.effective_chat.full_name}")
+    logging.info(f"Responding to /start in chat {get_chat_name(update.effective_chat)}")
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Hello! I'm the AO3 Tag Bot",
@@ -101,7 +109,9 @@ def help_command(
 ) -> None:
     """Respond to /help with an explanation of the bot"""
     if not quiet:
-        logging.info(f"Responding to /help in chat {update.effective_chat.full_name}")
+        logging.info(
+            f"Responding to /help in chat {get_chat_name(update.effective_chat)}"
+        )
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="I respond to messages containing AO3 links with the tags of the linked story",
@@ -109,7 +119,7 @@ def help_command(
 
 
 def message_reply(update: Update, context: CallbackContext) -> None:
-    logging.debug(f"Received message in chat {update.effective_chat.full_name}")
+    logging.debug(f"Received message in chat {get_chat_name(update.effective_chat)}")
 
     urls = find_ao3_story_urls(update.message.text)
     if urls:
@@ -119,7 +129,7 @@ def message_reply(update: Update, context: CallbackContext) -> None:
             # TODO: wrap in a try/except that does something generic but sane
             tag_info = get_tags_for_story_url(url)
             logging.info(
-                f"Sending message to {update.effective_chat.full_name} for URL {url}"
+                f"Sending message to {get_chat_name(update.effective_chat)} for URL {url}"
             )
             if tag_info is None:
                 message_text = (
