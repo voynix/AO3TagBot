@@ -49,16 +49,20 @@ def start_command(update: Update, context: CallbackContext) -> None:
     logging.info(f"Responding to /start in chat {update.effective_chat.full_name}")
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Hello! AO3 Tag Bot responds to messages containing AO3 links with the tags of the linked story",
+        text="Hello! I'm the AO3 Tag Bot",
     )
+    help_command(update, context, quiet=True)
 
 
-def help_command(update: Update, context: CallbackContext) -> None:
+def help_command(
+    update: Update, context: CallbackContext, *, quiet: bool = False
+) -> None:
     """Respond to /help with an explanation of the bot"""
-    logging.info(f"Responding to /help in chat {update.effective_chat.full_name}")
+    if not quiet:
+        logging.info(f"Responding to /help in chat {update.effective_chat.full_name}")
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="AO3 Tag Bot responds to messages containing AO3 links with the tags of the linked story",
+        text="I respond to messages containing AO3 links with the tags of the linked story",
     )
 
 
