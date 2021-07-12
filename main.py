@@ -152,9 +152,9 @@ I respond to messages containing AO3 links with the tags of the linked story.
 
 You can DM me links or add me to a group.
 
-If you add me to a group, you will need to make me an admin to allow me see and respond to your messages. Once you do this, I (and my operator) will be able to see all messages sent in the group. I do not store or do anything with your messages except scan them for AO3 story links.    
+If you add me to a group, you will need to make me an admin to allow me to see and respond to your messages. Once you do this, I (and my operator) will be able to see all messages sent in the group. I do not store or do anything with your messages except scan them for AO3 story links.    
 
-You can see my source code here: https://github.com/voynix/AO3TagBot
+You can view my source code here: https://github.com/voynix/AO3TagBot
 
 I support the following commands:
 /help - show this help message
