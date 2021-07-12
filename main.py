@@ -52,6 +52,13 @@ def find_ao3_story_urls(text: str) -> List[str]:
     return links
 
 
+def get_tag(soup: BeautifulSoup, tag_class: str) -> Optional[str]:
+    tag_node = soup.find("dd", class_=tag_class)
+    if not tag_node:
+        return None
+    return tag_node.string
+
+
 def get_tags_from_list(soup: BeautifulSoup, tag_list_class: str) -> Optional[str]:
     tag_list_node = soup.find("dd", class_=tag_list_class)
     if not tag_list_node:
@@ -74,7 +81,12 @@ def get_tags_for_story_url(url: str) -> Optional[Dict[str, str]]:
     tag_info = {}
     title_node = soup.find("h2", class_="title")
     if title_node:
-        tag_info["title"] = title_node.string
+        tag_info["title"] = title_node.string.strip()
+    author_node = soup.find("a", rel="author")
+    if author_node:
+        tag_info["author"] = author_node.string
+    tag_info["words"] = get_tag(soup, "words")
+    tag_info["chapters"] = get_tag(soup, "chapters")
     tag_info["rating"] = get_tags_from_list(soup, "rating")
     tag_info["warnings"] = get_tags_from_list(soup, "warning")
     tag_info["categories"] = get_tags_from_list(soup, "category")
@@ -97,7 +109,12 @@ def get_messages_for_story(url: str, tag_info: Dict[str, str]) -> List[str]:
     message_text = ""
     if "title" in tag_info:
         message_text += f"\n<b>{tag_info['title']}</b>"
+        if "author" in tag_info:
+            message_text += f" by <b>{tag_info['author']}</b>"
+        message_text += "\n"
     for key in [
+        "words",
+        "chapters",
         "rating",
         "warnings",
         "categories",
