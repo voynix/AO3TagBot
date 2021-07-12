@@ -185,6 +185,12 @@ I support the following commands:
 def message_reply(update: Update, context: CallbackContext) -> None:
     logging.debug(f"Received message in chat {get_chat_name(update.effective_chat)}")
 
+    if update.message is None:
+        logging.debug(
+            f"Message in chat {get_chat_name(update.effective_chat)} has no available message; ignoring"
+        )
+        return
+
     urls = find_ao3_story_urls(update.message.text)
     if urls:
         logging.debug(f"Found AO3 URLs {urls} in message")
